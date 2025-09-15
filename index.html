@@ -86,7 +86,7 @@
     let nextPiece = null, nextColor = '', nextPieceIndex = 0;
     let holdPiece = null, holdColor = '', holdPieceIndex = -1;
 
-    // ==== Drawing functions FIRST ====
+    // ==== Drawing functions ====
     function drawPiece(context, piece, color, canvas) {
       const previewBlockSize = 20;
       const offsetX = (canvas.width - piece[0].length * previewBlockSize) / 2;
@@ -297,22 +297,27 @@
     // ==== Input ====
     document.addEventListener('keydown', e => {
       if (!currentPiece) return;
-      switch (e.keyCode) {
-        case 37: currentPiecePos.x--; if (collide()) currentPiecePos.x++; break;
-        case 39: currentPiecePos.x++; if (collide()) currentPiecePos.x--; break;
-        case 40: drop(); break;
-        case 38: rotate(); break;
-        case 32: while (!collide()) currentPiecePos.y++; currentPiecePos.y--; drop(); break;
-        case 16: holdCurrentPiece(); break;
+
+      // Prevent page scrolling when using arrow keys or space
+      if ([32, 37, 38, 39, 40].includes(e.keyCode)) {
+        e.preventDefault();
       }
+
+      switch (e.keyCode) {
+        case 37: currentPiecePos.x--; if (collide()) currentPiecePos.x++; break; // Left
+        case 39: currentPiecePos.x++; if (collide()) currentPiecePos.x--; break; // Right
+        case 40: drop(); break; // Down
+        case 38: rotate(); break; // Up (rotate)
+        case 32: while (!collide()) currentPiecePos.y++; currentPiecePos.y--; drop(); break; // Space (hard drop)
+        case 16: holdCurrentPiece(); break; // Shift (hold)
+      }
+
       sendUpdate();
     });
 
     // ==== Start Game ====
     createPiece();
     update();
-    
-    console.log("Loaded:", typeof drawPreview, typeof draw);
   </script>
 </body>
 </html>
