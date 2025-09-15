@@ -318,6 +318,29 @@
     // ==== Start Game ====
     createPiece();
     update();
+
+    // ==== Auto-refresh when version changes ====
+    let currentVersion = null;
+
+    async function checkVersion() {
+      try {
+        const res = await fetch("version.json?_=" + Date.now());
+        const data = await res.json();
+
+        if (currentVersion === null) {
+          currentVersion = data.version; // first load
+          console.log("Current version:", currentVersion);
+        } else if (data.version !== currentVersion) {
+          console.log("New version detected, reloading...");
+          location.reload(true);
+        }
+      } catch (e) {
+        console.error("Version check failed", e);
+      }
+    }
+
+    setInterval(checkVersion, 30000);
+    checkVersion();
   </script>
 </body>
 </html>
