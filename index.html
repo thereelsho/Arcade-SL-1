@@ -86,47 +86,7 @@
     let nextPiece = null, nextColor = '', nextPieceIndex = 0;
     let holdPiece = null, holdColor = '', holdPieceIndex = -1;
 
-    // ===========================
-    // 🔌 WebSocket Sync
-    // ===========================
-    const ws = new WebSocket("wss://tetris-sync-server.onrender.com");
-
-    ws.onopen = () => console.log("Connected to sync server");
-    ws.onclose = () => console.log("Disconnected from sync server");
-    ws.onerror = (e) => console.error("WS error", e);
-
-    ws.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      if (msg.type === "state") applyGameState(msg.data);
-    };
-
-    function sendUpdate() {
-      const state = {
-        board,
-        score,
-        level,
-        currentPiece,
-        currentPiecePos,
-        nextPiece,
-        holdPiece
-      };
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: "update", data: state }));
-      }
-    }
-
-    function applyGameState(s) {
-      for (let y=0; y<rows; y++) for (let x=0; x<cols; x++) board[y][x] = s.board[y][x];
-      score = s.score; level = s.level;
-      currentPiece = s.currentPiece; currentPiecePos = s.currentPiecePos;
-      nextPiece = s.nextPiece; holdPiece = s.holdPiece;
-      scoreElement.textContent = `Score: ${score}`;
-      levelElement.textContent = `Level: ${level}`;
-      draw(); // ✅ call draw from original code
-    }
-    // ===========================
-
-    // ==== Drawing functions ====
+    // ==== Drawing functions FIRST ====
     function drawPiece(context, piece, color, canvas) {
       const previewBlockSize = 20;
       const offsetX = (canvas.width - piece[0].length * previewBlockSize) / 2;
@@ -194,7 +154,7 @@
       }
     }
 
-    // ==== Game Logic (shortened) ====
+    // ==== Game Logic ====
     function collide(piece = currentPiece, pos = currentPiecePos) {
       for (let y = 0; y < piece.length; y++) {
         for (let x = 0; x < piece[y].length; x++) {
@@ -286,6 +246,43 @@
         const newLevel = Math.floor(linesCleared / 10) + 1;
         if (newLevel !== level) { level = newLevel; levelElement.textContent = `Level: ${level}`; }
       }
+    }
+
+    // ==== WebSocket sync ====
+    const ws = new WebSocket("wss://tetris-sync-server.onrender.com");
+
+    ws.onopen = () => console.log("Connected to sync server");
+    ws.onclose = () => console.log("Disconnected from sync server");
+    ws.onerror = (e) => console.error("WS error", e);
+
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === "state") applyGameState(msg.data);
+    };
+
+    function sendUpdate() {
+      const state = {
+        board,
+        score,
+        level,
+        currentPiece,
+        currentPiecePos,
+        nextPiece,
+        holdPiece
+      };
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "update", data: state }));
+      }
+    }
+
+    function applyGameState(s) {
+      for (let y=0; y<rows; y++) for (let x=0; x<cols; x++) board[y][x] = s.board[y][x];
+      score = s.score; level = s.level;
+      currentPiece = s.currentPiece; currentPiecePos = s.currentPiecePos;
+      nextPiece = s.nextPiece; holdPiece = s.holdPiece;
+      scoreElement.textContent = `Score: ${score}`;
+      levelElement.textContent = `Level: ${level}`;
+      draw();
     }
 
     // ==== Main Loop ====
